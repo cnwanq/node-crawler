@@ -1,0 +1,23 @@
+{
+  "name": "node-crawler",
+  "version": "1.0.0",
+  "description": "node crawler step by step",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cnwanq/node-crawler.git"
+  },
+  "keywords": [
+    "node",
+    "crawler"
+  ],
+  "author": "cnwanq",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cnwanq/node-crawler/issues"
+  },
+  "homepage": "https://github.com/cnwanq/node-crawler#readme"
+}
