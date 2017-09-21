@@ -2,7 +2,7 @@
  * @Author            : cnwanq
  * @Date              : 2017-09-20 20: 49: 52
  * @Last Modified by  : cnwanq
- * @Last Modified time: 2017-09-21 19: 51: 51
+ * @Last Modified time: 2017-09-21 20: 14: 12
  */
 
 // var request = require('./crawler/request.js');
@@ -23,7 +23,7 @@ request(targetUrl, function (err, res, data) {
     $("a").each(function(index, element) {
         var href = $(this).attr("href");
 
-        if(href && href.length>0) {
+        if(href && href.length>0 && href != 'javascript:;') {
             indexHrefs[indexHrefs.length] = href;
         }
         
