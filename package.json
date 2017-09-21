@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/cnwanq/node-crawler/issues"
   },
-  "homepage": "https://github.com/cnwanq/node-crawler#readme"
+  "homepage": "https://github.com/cnwanq/node-crawler#readme",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "request": "^2.82.0"
+  }
 }
