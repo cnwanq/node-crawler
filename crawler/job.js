@@ -2,7 +2,7 @@
  * @Author            : cnwanq
  * @Date              : 2017-09-24 11: 57: 31
  * @Last Modified by  : cnwanq
- * @Last Modified time: 2017-09-25 03: 35: 53
+ * @Last Modified time: 2017-09-25 04: 35: 39
  */
 var Job = function () {
     this.type        = '';
@@ -20,9 +20,9 @@ var Job = function () {
     this.nextJob,
     this.nextJobCrawler = function(result, job){}
 
-};
+    Job.parser = function (data) {};
 
-Job.prototype.parser = function (data) {};
+};
 
 Job.copy = function(job) {
     var copyJob             = new Job();
@@ -38,11 +38,16 @@ Job.copy = function(job) {
 
         copyJob.interval = job.interval;
 
-        copyJob.nextJob        = job.nextJob;
+        if (job.nextJob) {
+            copyJob.nextJob = job.nextJob;
+        }
+        
         copyJob.nextJobCrawler = job.nextJobCrawler;
+        
+        copyJob.parser = job.parser;
 
     return copyJob;
     
-}
+};
 
 module.exports = Job;

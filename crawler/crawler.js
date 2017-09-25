@@ -2,7 +2,7 @@
  * @Author            : cnwanq
  * @Date              : 2017-09-24 09: 43: 59
  * @Last Modified by  : cnwanq
- * @Last Modified time: 2017-09-25 03: 47: 45
+ * @Last Modified time: 2017-09-25 10: 21: 51
  */
 var request    = require('./request');
 var parser     = require('./parser');
@@ -17,17 +17,19 @@ crawler = {
     faild  : [],
 
     requestCount   : 0,
-    maxRequestCount: 5
+    maxRequestCount: 2
 };
 
 
-crawler.excute = function() {
+crawler.excute = function () {
 
-    if(crawler.requestCount<crawler.maxRequestCount && crawler.jobs.length>0){
-        var job = crawler.jobs[0];
-        console.log('excute '+ JSON.stringify(crawler.jobs));
-        console.log();
+    if (crawler.requestCount < crawler.maxRequestCount && crawler.jobs.length > 0) {
         crawler.requestCount++;
+        
+        var job = crawler.jobs[0];
+        // console.log('excute '+ JSON.stringify(crawler.jobs));
+        // console.log();
+        
         if (job.type === 'collect') {
             crawler.collect(job);
         } else if (job.type === 'download') {
@@ -39,7 +41,8 @@ crawler.excute = function() {
 crawler.removeJob = function (job) {
     let _job = job;
     // console.log('removeJob ' + job.url);
-    // console.log(crawler.jobs);
+    // console.log(crawler.jobs.length);
+    // console.log(JSON.stringify(crawler));
     let jobIndex = -1;
     for (var index = 0; index < crawler.jobs.length; index++) {
         var __job = crawler.jobs[index];
@@ -52,14 +55,15 @@ crawler.removeJob = function (job) {
         crawler.jobs.splice(jobIndex, 1);
     }
     // console.log('jobIndex - '+jobIndex);
-    // console.log(crawler.jobs);
+    // console.log(crawler.jobs.length);
 }
 
 
-ep.on('run',function(job){
+ep.on('run', function (job) {
 
+    // console.log('emit run');
     let _job = Job.copy(job);
-    
+
     crawler.jobs.push(_job);
     console.log('push : '+JSON.stringify(crawler.jobs));
     console.log();
@@ -68,20 +72,24 @@ ep.on('run',function(job){
 });
 
 
-ep.on('data',function(job){
+ep.on('data', function (job) {
+    // console.log('emit data');
     let _job = job;
     crawler.requestCount--;
-    crawler.visited.push(job.url);
     crawler.removeJob(_job);
+    
+    crawler.visited.push(job.url);
     crawler.excute();
 
 });
 
-ep.on('err',function(job){
+ep.on('err', function (job) {
+    // console.log('emit err');
     let _job = job;
     crawler.requestCount--;
-    crawler.faild.push(_job.url);
     crawler.removeJob(_job);
+
+    crawler.faild.push(_job.url);
     crawler.excute();
 });
 
@@ -89,14 +97,19 @@ ep.on('err',function(job){
 
 crawler.run = function (job) {
     let _job = job;
-    // console.log('run '+job.url);
+    console.log('crawler run '+ job.url);
     // 防止重复
+    
+    // console.log('防止重复 - 1 '+crawler.visited.indexOf(_job.url));
+    // console.log('防止重复 - 2 '+crawler.faild.indexOf(_job.url));
 
-    if (_job && _job.url && crawler.visited.indexOf(_job.url) < 0 && crawler.faild.indexOf(_job.url) < 0) {
-        
+    if (_job && _job.url && (crawler.visited.indexOf(_job.url) < 0 && crawler.faild.indexOf(_job.url) < 0)) {
+        console.log('crawler run ok');
         // console.log('===run===');
-        ep.emit('run',_job);
-        
+        ep.emit('run', _job);
+
+    } else {
+        console.log('crawler 防重： '+ job.url);
     }
 }
 
@@ -111,27 +124,33 @@ crawler.collect = function (job) {
     };
 
     request(option).then(function (data) {
+        
         // success
         // console.log('==data==');
-        ep.emit('data',_job);
+        ep.emit('data', _job);
         
         if (data) {
             // 请求到的网页
-            var result = _job.parser(data);
 
+            console.log();
+            var result = _job.parser(data);
+            // console.log('_job.nextJob '+_job.nextJob);
+            // console.log('_job.nextJobCrawler '+_job.nextJobCrawler);
             if (result && _job.nextJob && _job.nextJobCrawler) {
-                // console.log('nextJobCrawler');
+                // console.log('nextJobCrawler '+_job.url);
 
                 // var cloneOfjob   = JSON.parse(JSON.stringify(_job.nextJob));
-                var cloneJob     = Job.copy(_job);
+                var cloneJob     = Job.copy(_job.nextJob);
                     _job.nextJob = cloneJob;
                 _job.nextJobCrawler(result, cloneJob);
             }
         }
 
+        
+
     }).catch(function (err) {
         // faild
-        ep.emit('err',_job);
+        ep.emit('err', _job);
         console.log(err);
     });;
 
