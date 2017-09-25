@@ -2,7 +2,7 @@
  * @Author            : cnwanq
  * @Date              : 2017-09-24 11: 57: 31
  * @Last Modified by  : cnwanq
- * @Last Modified time: 2017-09-25 04: 35: 39
+ * @Last Modified time: 2017-09-25 14: 03: 25
  */
 var Job = function () {
     this.type        = '';
@@ -24,6 +24,9 @@ var Job = function () {
 
 };
 
+/**
+ * 克隆方法
+ */
 Job.copy = function(job) {
     var copyJob             = new Job();
         copyJob.type        = job.type;

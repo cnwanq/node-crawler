@@ -2,7 +2,7 @@
  * @Author            : cnwanq
  * @Date              : 2017-09-24 09: 43: 59
  * @Last Modified by  : cnwanq
- * @Last Modified time: 2017-09-25 12: 57: 15
+ * @Last Modified time: 2017-09-25 14: 02: 23
  */
 var request    = require('./request');
 var parser     = require('./parser');
@@ -12,16 +12,18 @@ var EventProxy = require("eventproxy");
 ep = new EventProxy();
 
 crawler = {
-    jobs   : [],
-    list   : [],
-    visited: [],
-    faild  : [],
+    jobs   : [],   // 任务表
+    list   : [],   // 请求队列
+    visited: [],   // 已经请求完成的
+    faild  : [],   // 请求失败的
 
     requestCount   : 0,
     maxRequestCount: 5
 };
 
-
+/**
+ * 执行的方法
+ */
 crawler.excute = function () {
     
     if (crawler.requestCount < crawler.maxRequestCount && crawler.jobs.length > 0) {
@@ -43,7 +45,6 @@ crawler.excute = function () {
             }
         }
 
-       
         // console.log('listCount - '+listCount);
         var job = crawler.jobs[excuteJobIndex];
         if (crawler.list.indexOf(job.url)>=0) {
@@ -65,12 +66,14 @@ crawler.excute = function () {
     }
 }
 
+/**
+ * 移除任务的方法
+ */
 crawler.removeJob = function (job) {
     let _job = job;
-    // console.log('removeJob ' + job.url);
-    // console.log(crawler.jobs.length);
-    // console.log(JSON.stringify(crawler));
+
     let jobIndex = -1;
+    
     for (var index = 0; index < crawler.jobs.length; index++) {
         var __job = crawler.jobs[index];
         if (__job.url == _job.url) {
@@ -78,35 +81,32 @@ crawler.removeJob = function (job) {
             break;
         }
     }
+    
     let listIndex = -1;
         listIndex = crawler.list.indexOf(_job.url);
+
     if (jobIndex >= 0) {
-        // console.log('remove job url 1 : '+crawler.jobs[jobIndex].url);
-        // console.log('remove job url 2 : '+crawler.list[jobIndex]);
         crawler.jobs.splice(jobIndex, 1);
         crawler.list.splice(listIndex, 1);
-
-        // console.log('remove jobs length 1 : '+crawler.jobs.length);
-        // console.log('remove list length 2 : '+crawler.list.length);
     }
-    // console.log('jobIndex - '+jobIndex);
-    // console.log(crawler.jobs.length);
 }
 
 
+/**
+ * 监听 run 的事件 - 开始处理job
+ */
 ep.on('run', function (job) {
 
     console.log('emit run');
     let _job = Job.copy(job);
 
     crawler.jobs.push(_job);
-    // console.log('push : '+JSON.stringify(crawler.jobs));
-    // console.log();
     crawler.excute();
-
 });
 
-
+/**
+ * 监听 data 的事件 - 请求完成
+ */
 ep.on('data', function (job) {
     console.log('emit data');
     let _job = job;
@@ -118,6 +118,9 @@ ep.on('data', function (job) {
 
 });
 
+/**
+ * 监听 err 的事件 - 请求异常
+ */
 ep.on('err', function (job) {
     console.log('emit err');
     let _job = job;
@@ -128,8 +131,9 @@ ep.on('err', function (job) {
     crawler.excute();
 });
 
-
-
+/**
+ * Crawler run 方法
+ */
 crawler.run = function (job) {
     let _job = job;
     var date = new Date();
@@ -140,7 +144,7 @@ crawler.run = function (job) {
     // console.log('防止重复 - 2 '+crawler.faild.indexOf(_job.url));
 
     if (_job && _job.url && (crawler.visited.indexOf(_job.url) < 0 && crawler.faild.indexOf(_job.url) < 0)) {
-        // console.log('===run===');
+
         ep.emit('run', _job);
 
     } else {
@@ -159,22 +163,15 @@ crawler.collect = function (job) {
     };
 
     request(option).then(function (data) {
-        
-        // success
-        // console.log('==data==');
+
         ep.emit('data', _job);
         
         if (data) {
             // 请求到的网页
-
             console.log("collect parser _job" + job.url);
             var result = _job.parser(data);
-            // console.log('_job.nextJob '+_job.nextJob);
-            // console.log('_job.nextJobCrawler '+_job.nextJobCrawler);
-            if (result && _job.nextJob && _job.nextJobCrawler) {
-                // console.log('nextJobCrawler '+_job.url);
 
-                // var cloneOfjob   = JSON.parse(JSON.stringify(_job.nextJob));
+            if (result && _job.nextJob && _job.nextJobCrawler) {
                 var cloneJob     = Job.copy(_job.nextJob);
                     _job.nextJob = cloneJob;
                 _job.nextJobCrawler(result, cloneJob);

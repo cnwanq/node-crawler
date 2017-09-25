@@ -5,6 +5,7 @@ var parser = require('./crawler/parser');
 var fs  = require('fs');
 var url = require('url');
 
+// 顶一个 任务 
 var klookHomeJob = new Job();
 
 klookHomeJob.type   = 'collect';
@@ -12,6 +13,7 @@ klookHomeJob.name   = 'klook-web';
 klookHomeJob.url    = 'https://www.klook.com';
 klookHomeJob.method = 'GET';
 
+// 实现需要解析的逻辑
 klookHomeJob.parser = function (data) {
     var job   = this;
     var hrefs = new Array();
@@ -46,6 +48,7 @@ klookHomeJob.parser = function (data) {
     return hrefs;
 };
 
+// 实现 该任务 存在子任务执行的方法
 klookHomeJob.nextJobCrawler = function (result, job) {
     var parentJob = this;
 
@@ -53,10 +56,7 @@ klookHomeJob.nextJobCrawler = function (result, job) {
     job.nextJob = null;
     
     result = result.splice(0, 100);
-    // result.forEach(function (href, index) {
-    //     console.log(href);
-    // });
-    // console.log('nextJobCrawler : '+result.length);
+
     result.forEach(function (href, index) {
         job.url = href;
         crawler.run(job);
@@ -64,13 +64,16 @@ klookHomeJob.nextJobCrawler = function (result, job) {
     });
 };
 
+// 创建子任务
 var klookCityJob = new Job();
 
+// 将子任务 关联到 父任务
 klookHomeJob.nextJob = klookCityJob;
 
 klookCityJob.type   = 'collect';
 klookCityJob.method = 'GET';
 
+// 子任务的解析方法
 klookCityJob.parser = function (data) {
 
     var job = this;
