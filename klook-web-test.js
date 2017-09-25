@@ -60,6 +60,7 @@ klookHomeJob.nextJobCrawler = function (result, job) {
     result.forEach(function (href, index) {
         job.url = href;
         crawler.run(job);
+        console.log("crawler run index " + index +' | '+ href);
     });
 };
 
@@ -76,7 +77,7 @@ klookCityJob.parser = function (data) {
 
     var $    = parser.load(data);
     var text = $("h1 b").text();
-    console.log(text + "-"+job.url);
+    console.log(text + " - "+job.url);
 
     var urlObj = url.parse(job.url);
     var host   = urlObj.host;

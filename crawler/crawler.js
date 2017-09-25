@@ -2,7 +2,7 @@
  * @Author            : cnwanq
  * @Date              : 2017-09-24 09: 43: 59
  * @Last Modified by  : cnwanq
- * @Last Modified time: 2017-09-25 10: 21: 51
+ * @Last Modified time: 2017-09-25 12: 57: 15
  */
 var request    = require('./request');
 var parser     = require('./parser');
@@ -13,20 +13,47 @@ ep = new EventProxy();
 
 crawler = {
     jobs   : [],
+    list   : [],
     visited: [],
     faild  : [],
 
     requestCount   : 0,
-    maxRequestCount: 2
+    maxRequestCount: 5
 };
 
 
 crawler.excute = function () {
-
+    
     if (crawler.requestCount < crawler.maxRequestCount && crawler.jobs.length > 0) {
         crawler.requestCount++;
         
-        var job = crawler.jobs[0];
+        console.log('当前并发数：'+crawler.requestCount);
+        // 获取没有执行的 job
+        var listCount = crawler.list.length;
+        
+        var excuteJobIndex = 0;
+        for (let i=0; i<crawler.jobs.length; i++) {
+            var url = crawler.jobs[i].url;
+            for (let l=0; l<listCount; l++) {
+                if(crawler.list.indexOf(url)<0){
+                    excuteJobIndex = i;
+                } else {
+                    break;
+                }
+            }
+        }
+
+       
+        // console.log('listCount - '+listCount);
+        var job = crawler.jobs[excuteJobIndex];
+        if (crawler.list.indexOf(job.url)>=0) {
+            return;
+        }
+        
+        crawler.list[listCount] = job.url;
+
+        var date = new Date();
+        console.log('excute call : '+job.url + ' '+date);
         // console.log('excute '+ JSON.stringify(crawler.jobs));
         // console.log();
         
@@ -51,8 +78,16 @@ crawler.removeJob = function (job) {
             break;
         }
     }
+    let listIndex = -1;
+        listIndex = crawler.list.indexOf(_job.url);
     if (jobIndex >= 0) {
+        // console.log('remove job url 1 : '+crawler.jobs[jobIndex].url);
+        // console.log('remove job url 2 : '+crawler.list[jobIndex]);
         crawler.jobs.splice(jobIndex, 1);
+        crawler.list.splice(listIndex, 1);
+
+        // console.log('remove jobs length 1 : '+crawler.jobs.length);
+        // console.log('remove list length 2 : '+crawler.list.length);
     }
     // console.log('jobIndex - '+jobIndex);
     // console.log(crawler.jobs.length);
@@ -61,19 +96,19 @@ crawler.removeJob = function (job) {
 
 ep.on('run', function (job) {
 
-    // console.log('emit run');
+    console.log('emit run');
     let _job = Job.copy(job);
 
     crawler.jobs.push(_job);
-    console.log('push : '+JSON.stringify(crawler.jobs));
-    console.log();
+    // console.log('push : '+JSON.stringify(crawler.jobs));
+    // console.log();
     crawler.excute();
 
 });
 
 
 ep.on('data', function (job) {
-    // console.log('emit data');
+    console.log('emit data');
     let _job = job;
     crawler.requestCount--;
     crawler.removeJob(_job);
@@ -84,7 +119,7 @@ ep.on('data', function (job) {
 });
 
 ep.on('err', function (job) {
-    // console.log('emit err');
+    console.log('emit err');
     let _job = job;
     crawler.requestCount--;
     crawler.removeJob(_job);
@@ -97,14 +132,14 @@ ep.on('err', function (job) {
 
 crawler.run = function (job) {
     let _job = job;
-    console.log('crawler run '+ job.url);
+    var date = new Date();
+    console.log('crawler run '+ job.url + ' '+ date);
     // 防止重复
     
     // console.log('防止重复 - 1 '+crawler.visited.indexOf(_job.url));
     // console.log('防止重复 - 2 '+crawler.faild.indexOf(_job.url));
 
     if (_job && _job.url && (crawler.visited.indexOf(_job.url) < 0 && crawler.faild.indexOf(_job.url) < 0)) {
-        console.log('crawler run ok');
         // console.log('===run===');
         ep.emit('run', _job);
 
@@ -132,7 +167,7 @@ crawler.collect = function (job) {
         if (data) {
             // 请求到的网页
 
-            console.log();
+            console.log("collect parser _job" + job.url);
             var result = _job.parser(data);
             // console.log('_job.nextJob '+_job.nextJob);
             // console.log('_job.nextJobCrawler '+_job.nextJobCrawler);
